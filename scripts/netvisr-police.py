@@ -19,6 +19,13 @@ CHECK_INTERVAL = 0.1
 ip_attempts = {}
 banned_ips = []
 
+
+# Create folders and files if they don't exist
+os.makedirs(os.path.dirname(JAIL_FILE), exist_ok=True)
+
+if not os.path.exists(JAIL_FILE):
+    open(JAIL_FILE, 'w').close()
+
 def jail_ip(ip):
     with open(JAIL_FILE, 'r') as jail:
         if ip in jail.read():
@@ -38,16 +45,6 @@ def read_new_lines(file, last_position):
     lines = file.readlines()
     return lines, file.tell()
 
-# Create jail directory if it doesn't exist
-jail_dir = os.path.dirname(JAIL_FILE)
-os.makedirs(jail_dir, exist_ok=True)
-
-# Create jail file if it doesn't exist
-if not os.path.exists(JAIL_FILE):
-    with open(JAIL_FILE, 'w') as jail:
-        pass
-    
-
 # Block all IPs from the jail file at the start
 with open(JAIL_FILE, 'r') as jail:
     for line in jail:
@@ -57,6 +54,11 @@ with open(JAIL_FILE, 'r') as jail:
 last_position = 0
 
 while True:
+    # If not exists the file, continue
+    if not os.path.exists(LOG_FILE):
+        time.sleep(CHECK_INTERVAL)
+        continue
+
     with open(LOG_FILE, 'r') as log:
         lines, last_position = read_new_lines(log, last_position)
         

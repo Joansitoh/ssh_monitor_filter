@@ -73,8 +73,11 @@ install_service() {
     pip3 install configparser
 
     cp scripts/netvisr-police.service /etc/systemd/system/netvisr-police.service
+    sleep 1
     systemctl daemon-reload
+    sleep 1
     systemctl enable netvisr-police
+    sleep 1
     systemctl start netvisr-police
 
     cp setup.sh /usr/bin/netvisr-police
@@ -98,6 +101,7 @@ uninstall_service() {
     rm /etc/netvisr/jail.conf
     rm /usr/bin/netvisr/netvisr-police.py
     rm -rf /usr/bin/netvisr
+    rm /usr/bin/netvisr-police
 
     show_ascii_art "${GREEN}Service uninstalled successfully" "" "Service stopped and disabled" "" "Actions:" "[1] Install service" "[2] Check service status" "[3] Exit${NC}"
     prompt
@@ -153,6 +157,8 @@ prompt() {
             check_status
             ;;
         3)
+            clear
+            echo "Thank you for using NetVisr SSH Monitor Filters"
             exit 0
             ;;
         *)
