@@ -3,7 +3,7 @@ Description=NetVisr SSH Monitor police service
 After=network.target
 
 [Service]
-ExecStart=/usr/bin/netvisr/netvisr-police.py
+ExecStart=/usr/bin/python3 /usr/bin/netvisr/netvisr-police.py
 Restart=always
 User=root
 

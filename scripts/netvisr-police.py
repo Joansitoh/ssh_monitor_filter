@@ -1,3 +1,4 @@
+import os
 import re
 import subprocess
 import time
@@ -16,8 +17,12 @@ THRESHOLD = config.getint('ssh', 'MaxThreshold')
 CHECK_INTERVAL = 0.1
 
 ip_attempts = {}
+banned_ips = []
 
 def jail_ip(ip):
+    with open(JAIL_FILE, 'r') as jail:
+        if ip in jail.read():
+            return
     with open(JAIL_FILE, 'a') as jail:
         jail.write(f'{ip}\n')
 
@@ -25,12 +30,23 @@ def block_ip(ip, silent=False):
     subprocess.run(['iptables', '-A', 'INPUT', '-s', ip, '-j', 'DROP'])
     jail_ip(ip)
 
-    print(f'[{time.ctime()}] IP Address {ip} has been blocked.')
+    if not silent:
+        print(f'[{time.ctime()}] IP Address {ip} has been blocked.')
 
 def read_new_lines(file, last_position):
     file.seek(last_position)
     lines = file.readlines()
     return lines, file.tell()
+
+# Create jail directory if it doesn't exist
+jail_dir = os.path.dirname(JAIL_FILE)
+os.makedirs(jail_dir, exist_ok=True)
+
+# Create jail file if it doesn't exist
+if not os.path.exists(JAIL_FILE):
+    with open(JAIL_FILE, 'w') as jail:
+        pass
+    
 
 # Block all IPs from the jail file at the start
 with open(JAIL_FILE, 'r') as jail:
@@ -48,6 +64,9 @@ while True:
             match = re.search(REGEX, line)
             if match:
                 ip = match.group(1)
+                if ip in banned_ips:
+                    continue
+
                 if ip in ip_attempts:
                     ip_attempts[ip] += 1
                 else:
@@ -55,6 +74,6 @@ while True:
 
                 if ip_attempts[ip] >= THRESHOLD:
                     block_ip(ip)
-                    ip_attempts[ip] = 0
+                    banned_ips.append(ip)
 
     time.sleep(CHECK_INTERVAL)
